@@ -1,4 +1,47 @@
-baseURL = "https://soichi.us/"
-languageCode = "en-us"
-title = "Soichi.us"
-theme = "sustain"
+baseurl = "https://soichi.us/"
+languageCode = "en-US"
+title = "Soichi Hayashi"
+# Enable comments by entering your Disqus shortname
+disqusShortname = "soichi.us"
+# Enable Google Analytics by entering your tracking code
+googleAnalytics = "UA-46824333-1"
+theme = "hugo-sustain"
+
+[permalinks]
+  post = "/:year/:month/:day/:slug"
+
+[params]
+  avatar = "profile.png"
+  author = "Soichi Hayashi"
+  description = "Describe your website"
+
+  # Custom assets can be linked with their paths relative to static/
+  custom_css = []
+  custom_js  = []
+
+[params.social]
+  Github        = "soichih"
+  Email         = "soichih@gmail.com"
+  Twitter       = "soichih"
+  LinkedIn      = "soichihayashi"
+  Stackoverflow = "soichi-hayashi"
+#  Medium        = "username"
+#  Telegram      = "username"
+
+## Main Menu
+[[menu.main]]
+  name = "blog"
+  weight = 100
+  identifier = "blog"
+  url = "/blog/"
+[[menu.main]]
+  name = "projects"
+  identifier = "projects"
+  weight = 200
+  url = "/projects/"
+[[menu.main]]
+  name = "resume"
+  identifier = "resume"
+  weight = 300
+  url = "https://docs.google.com/document/d/17fKDYHgBalLlfEvJQfdrYhar5Er-d9D1ItTDSnG-lPs"
+
