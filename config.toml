@@ -1,0 +1,4 @@
+baseURL = "https://soichi.us/"
+languageCode = "en-us"
+title = "Soichi.us"
+theme = "sustain"
