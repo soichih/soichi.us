@@ -1,9 +1,21 @@
 name: Projects
 source:
+
+  - icon: fa fa-globe
+    title: brainlife.io
+    url: https://brainlife.io
+    description: Free cloud platform for secure neuroscience data analysis.
+
   - icon: fa fa-github
     title: ezBIDS
     url: https://github.com/brainlife/ezbids
     description: A web service for converting directory full of DICOM images into BIDS without users having to learn python nor custom configuration file.
+
+  - icon: fa fa-github
+    title: autohpss
+    url: https://github.com/soichih/autohpss
+    description: A simple, straightforward way to archive and restore data from HPSS(SDA).
+
 #  - icon: fa fa-github
 #    description: An eripuit phaedrum qui, nec facer splendide ex, vel ea assum facilisi convenire. Te his neglegentur consectetuer.
 
