@@ -5,5 +5,3 @@ tags: ["projects"]
 title: "Projects"
 showpagemeta: false
 ---
-
-How does this work?

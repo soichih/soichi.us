@@ -1,0 +1,200 @@
+{{ partial "head" . }}
+  <body>
+    <div id="wrap">
+
+      <!-- Header -->
+      {{ partial "header" . }}
+      {{ if isset .Params "showpagemeta" }}
+        {{ .Render "projects" }}
+      {{ else }}
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="{{ .Permalink }}">{{ .Title }}</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          {{ .Date.Format "January 2, 2006" }}
+            &nbsp;&nbsp;
+            {{ range .Params.tags }}
+            <span class="label label-success">{{ . }}</span>
+            {{ end }}
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              {{ .Content }}
+
+              <canvas id="canvas" style="width: 100%; height: 800px; background-color: black;"></canvas>
+
+              <script>
+              navigator.mediaDevices.getUserMedia({
+                  video: false, audio: true
+              }).then(stream => {
+                  const ac = new AudioContext();
+                  const source = ac.createMediaStreamSource(stream);
+                  const analyser = ac.createAnalyser();
+                  analyser.fftSize = 2048*4;
+                  //analyser.maxDecibels = 0; //default -30
+                  //analyser.minDecibels = -70; //default -100
+                  analyser.smoothingTimeConstant = 0.8; //default 0.8
+                  console.dir(analyser);
+              
+                  const lp = ac.createBiquadFilter(); //lowpass to cut noise
+                  source.connect(lp);
+                  lp.connect(analyser);
+              
+                  const canvas = document.getElementById("canvas");
+                  canvas.width = canvas.clientWidth;
+                  canvas.height = 800;
+              
+                  const c2d = canvas.getContext("2d");
+              
+                  // power of "time domain data"(=sampled gain) as 0-255
+                  // (window function applyed: reducing weight from center to past/future)
+                  const tds = new Uint8Array(analyser.fftSize); //2048 by default?
+                  // power of frequencies (0-255 rate) as dB(= 20*log10(|gain_of_freq|))
+                  // (smoothing filter applyied)
+                  const freqs = new Uint8Array(analyser.frequencyBinCount);
+              
+                  function indexHue(index) {
+                      return (Math.log2(index) % 1) * 360; // coloring by octave
+                  }
+              
+                  let keyuse = [];
+                  //let keyuse_sum = [];
+                  for(var i = 0;i < 12; ++i) {
+                    keyuse[i] = 20;
+                    //keyuse_sum[i] = 0;
+                  }
+              
+                  let frames = 0;
+                  (function draw() {
+                      requestAnimationFrame(_ => {
+                          frames++;
+                          analyser.getByteFrequencyData(freqs);
+                          analyser.getByteTimeDomainData(tds);
+                          c2d.clearRect(0, 0, canvas.width, canvas.height);
+              
+              
+                          //draw wave form
+                          c2d.fillStyle = "gray";
+                          for (let i = 0; i < analyser.fftSize; i++) {
+                              const v = tds[i];
+                              c2d.fillRect(i, canvas.height - v, 1, v);
+                          }
+              
+                          //draw keys
+                          const keys = [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ];
+                          let d = 2*Math.PI/12;
+                          for(var key = 0;key < 12;++key) {
+                              //c2d.lineWidth = keyuse_sum[key]/1000+20;
+                              c2d.lineWidth = 150;
+                              c2d.beginPath();
+                              c2d.arc(canvas.width/2,canvas.height/2,300,key*d+d/4,(key+1)*d-d/4);
+                              c2d.strokeStyle = "hsl("+(key*30)+", 50%, "+keyuse[key]+"%)";
+                              c2d.stroke();
+              
+                              //dim
+                              if(keyuse[key] > 10) {
+                                keyuse[key]-=0.3;
+                              }
+                          }
+              
+                          c2d.fillStyle = 'white';
+                          c2d.font="25px Verdana";
+                          for(var key = 0;key < 12;++key) {
+                              var x = Math.cos((2*Math.PI)*key/12+3.9)*300;
+                              var y = Math.sin((2*Math.PI)*key/12+3.9)*300;
+                              c2d.fillText(keys[key], x+canvas.width/2-10, y+canvas.height/2);
+                          }
+              
+                          c2d.beginPath();
+                          c2d.lineWidth = 2;
+                          var first = true;
+                          //for (let i = 100; i < analyser.frequencyBinCount; i++) {
+                          //console.log(analyser.frequencyBinCount); //1014
+                          var prev_note = null;
+                          //var prev_vel = [];
+                          for (let i = 0; i < analyser.frequencyBinCount; i++) {
+                              let v = freqs[i];
+                              //calculate radial pos
+                              var ckey = Math.log2(i);
+                              var oct = Math.floor(ckey);
+                              var key = ckey%1;
+              
+                              if(oct < 4) continue; //ignore low frequency - not accurate
+              
+                              v+=0;
+              
+                              //trigger keyuse
+                              var note = Math.floor(ckey*12);
+                              var dist = Math.abs(ckey*12 - note);
+                              var use = v/(dist+0.1)/150*oct;
+                              //if(frames % 1000 == 0) console.log(dist);
+                              //if(dist < 0.20) { // && keyuse[note%12] < v/3) {
+                              if(keyuse[note%12] < use) keyuse[note%12] = use;
+                              //}
+              
+                              //TODO - instead of completely stop showing, maybe I should skip a few values?
+                              if(oct > 8) continue; //don't need to show too high
+              
+                              var x = Math.cos((2*Math.PI)*key+0.14)*v;
+                              var y = Math.sin((2*Math.PI)*key+0.14)*v;
+                              if(first) c2d.moveTo(canvas.width/2+x, canvas.height/2+y);
+                              first = false;
+                              c2d.lineTo(canvas.width/2+x, canvas.height/2+y);
+                              //use different color for each note
+                              if(prev_note == null) prev_note = note;
+                              if(prev_note != note) {
+                                  c2d.strokeStyle = "hsl("+(note*4)+", 90%, 50%)";
+                                  //c2d.strokeStyle = "hsl(0, 0%, "+(note)+"%)";
+                                  //console.log(note);
+                                  c2d.stroke();
+                                  prev_note = note;
+                                  c2d.beginPath();
+                                  c2d.moveTo(canvas.width/2+x, canvas.height/2+y);
+                              }
+                          }
+                          c2d.stroke(); //stroke the rest
+              
+                          draw();
+                      });
+                  })();
+              }).catch(err => console.log(err));
+              </script>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                {{ range first 3 ( where ( where .Site.Pages.ByDate.Reverse ".Params.tags" "intersect" .Params.tags ) "Permalink" "!=" .Permalink ) }}
+                  <div class="row">
+                    <div class="col-sm-4 col-md-4 col-lg-4">
+                      <h6 style="text-align: right">
+                        {{ .Date.Format "January 2, 2006" }}
+                      </h6>
+                    </div>
+                    <div class="col-sm-8 col-md-8 col-lg-8">
+                      <h6 style="text-align: left">
+                        <strong><a href="{{ .RelPermalink }}">{{ .Title | markdownify }}</a></strong>
+                      </h6>
+                    </div>
+                  </div>
+                {{ end }}
+              </div>
+            </div>
+          </div>
+          <hr>
+        {{ partial "disqus" . }}
+        </div>
+      </div>
+      {{ end }}
+    </div>
+
+    <!-- Footer -->
+    {{ partial "footer" . }}
+    
+  </body>
+</html>
