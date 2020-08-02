@@ -1,7 +1,7 @@
 ---
-title: "systemd tips"
+title: "systemd startup tips"
 date: 2020-08-01T18:26:57-04:00
-draft: true
+draft: false
 ---
 
 Some of my docker containers use NFS mounts that are configured in /etc/fstab. During a reboot, I've seen my containers failing to start when docker engine is started before all the mount points are mounted. There is a relatively simple but not too obvious solution to this which involves tweaking systemd rules such as `Requires` and `After`.

@@ -18,13 +18,13 @@ We shouldn't be making our code easier to read by computers.
 
 Fix bug by removing code that is creating the bug - rather than adding more code to treats the symptoms of the bug.
 
-## 4. "You aren't gonna need it"
+## 4. "You aren't gonna need it" (YAGNI)
 
 Don't implement functionality that you think you probably going to need it. Wait until you actually need it.
 
-## 5. Writing twice is too many
+## 5. Writing twice is too many (DRY)
 
-If there is a similar code repeated *twice* anywhere, refactor it by analyzing the logics / structure of the app.
+If there is a similar code repeated *twice* anywhere in your code, refactor them immediately. Don't want until you have 3 instances of similar code. 
 
 # Non-coding related principle
 
