@@ -16,6 +16,26 @@ source:
     url: https://github.com/soichih/autohpss
     description: A simple, straightforward way to archive and restore data from HPSS(SDA).
 
+  - icon: fa fa-globe
+    title: OHBM2020 Posters
+    url: https://datalad-datasets.github.io/ohbm2020-posters/#/
+    description: OHBM2020's online poster session only provided a limited functionality. I've developed a backend and front end that allowed users to 1) search poster entries and screenshots, 2) meet via jitsu, and 3) leave a note via etherpost.
+
+  - icon: fa fa-github
+    title: brainlife/TractView
+    url: https://github.com/brainlife/ui-tractview
+    description: brainlife.io's brain connectome(fiber) viewer using WebGL
+
+  - icon: fa fa-github
+    title: brainlife/NetworkNeuro
+    url: https://github.com/brainlife/ui-networkneuro-tracts
+    description: A unique visualizer that simultaneously shows a matrix of structural connections and the anatomy of the connections for brainlife.io.
+    
+  - icon: fa fa-github
+    title: brainlife/pRFViewer
+    url: https://github.com/brainlife/ui-prf
+    description: pRF (virual pupulation receptive field) visualizer for brainlife.io
+ 
 #  - icon: fa fa-github
 #    description: An eripuit phaedrum qui, nec facer splendide ex, vel ea assum facilisi convenire. Te his neglegentur consectetuer.
 
