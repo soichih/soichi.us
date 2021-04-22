@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Soichi Hayashi" />
+    <meta name="description" content="Soichi Hayashi - Senior Software Engineer">
+    <link rel="shortcut icon" type="image/x-icon" href="https://soichi.us/img/favicon.ico">
+    <title>systemd startup tips</title>
+    <meta name="generator" content="Hugo 0.82.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://soichi.us/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-46824333-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="https://soichi.us/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="https://docs.google.com/document/d/17fKDYHgBalLlfEvJQfdrYhar5Er-d9D1ItTDSnG-lPs">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="https://soichi.us/blog/systemd-tips/">systemd startup tips</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          August 1, 2020
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              <p>Some of my docker containers use NFS mounts that are configured in /etc/fstab. During a reboot, I&rsquo;ve seen my containers failing to start when docker engine is started before all the mount points are mounted. There is a relatively simple but not too obvious solution to this which involves tweaking systemd rules such as <code>Requires</code> and <code>After</code>.</p>
+<p>Let me start out by pointing out that, docker engine is controlled by the following service file</p>
+<p><code>/etc/systemd/system/multi-user.target.wants/docker.service</code></p>
+<pre><code>[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+Requires=docker.socket
+After=network.target docker.socket firewalld.service
+...
+
+</code></pre><p>By ready through <a href="https://www.freedesktop.org/software/systemd/man/systemd.unit.html">https://www.freedesktop.org/software/systemd/man/systemd.unit.html</a> It seems that the <code>Requires</code> sets up logical relationships between various units; which services start together or die together, etc.  For example, above configuration states that if docker.socket should be started when the docker.service is started, or conversely if docker.socket is stopped, docker.service should also be stopped (yikes!).</p>
+<p>However, the <code>Requires</code> by itself does <em>not</em> prevent docker.service from starting up when docker.socket is started. They are both started simultaneously (or shutdown simultaneously). To make sure that docker service will start only after docker.socket is fully started, we need to add docker.socket in another directive; <code>After</code>. I think you should almost always want to put the dependencies in both Requires and After.</p>
+<p>As I said, <code>Requires</code> make your service completely dependent of listed services. If docker.socket is shut down, then docker.service will be shut down also. If you want to let a service running even when the depending service shuts down, then you can use <code>Wants</code> instead. <code>Wants</code> works like <code>Requires</code>, it tries to start those depending service when the service is started.  But it doesn&rsquo;t prevent the service from starting up even those depending services fail to start, or gets shut down. The documentation recommends that Wants/After is usually how most units are hooked together, which makes sense.</p>
+<p>However, if I know that certain services are started on boot by something else, like the /etc/fstab mount point case, then all I want to do is to make sure that those mount points gets mounted <em>before</em> docker engine starts up. Then, all I have to do is to simply list it under <code>After</code> and I don&rsquo;t have to worry about <code>Requires</code> nor <code>Wants</code>.</p>
+<p>Then I can do,</p>
+<pre><code>[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+Requires=docker.socket
+After=network.target docker.socket firewalld.service mnt-scratch.mount
+</code></pre><p>This seems to work, and I&rsquo;ve tested a couple of times by rebooting my machine. Docker was started <em>after</em> my scratch mount point was mounted.</p>
+<p>The <code>mnt-scratch.mount</code> here is a systemd unit used to mount the /mnt/scratch specified in my /etc/fstab. But how do I know the name of this unit? I don&rsquo;t quite understand how systemd translates /etc/fstab to registered units, but you can run the following to dump the current list of known units related to your mount point.</p>
+<pre><code>$ systemctl list-units | grep /mnt/scratch
+  mnt-scratch.mount                                                                                         loaded    active mounted   /mnt/scratch
+</code></pre><p>This shows that <code>mnt-scratch.mount</code> unit is responsible for mounting /mnt/scratch, which is what I used to update the After= statement with.  You can also see the whole dependency tree with <code>systemctl list-dependencies</code>.</p>
+<p>Now, if I know that /mnt/scratch is <em>not</em> automatically mounted or started by other systemd services, then I believe I could add it to <code>Wants</code> to make sure that it&rsquo;s mounted when docker starts up.</p>
+<pre><code>Requires=docker.socket
+Wants=mnt-scratch.mount
+After=network.target docker.socket firewalld.service mnt-scratch.mount
+</code></pre><p>Or.. if I really need that mount point for the whole docker engine to operate, then&hellip;</p>
+<pre><code>Requires=docker.socket mnt-scratch.mount
+After=network.target docker.socket firewalld.service mnt-scratch.mount
+</code></pre><p>Be aware that, using <code>Requires</code> means that if /mnt/scratch is unmounted (via systemd?), the whole docker engine will be terminated.. which may or may not be what you want.</p>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = 'soichi';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://soichi.us/js/docs.min.js"></script>
+<script src="https://soichi.us/js/main.js"></script>
+
+<script src="https://soichi.us/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

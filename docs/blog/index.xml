@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blogs on Soichi Hayashi</title>
+    <link>https://soichi.us/blog/</link>
+    <description>Recent content in Blogs on Soichi Hayashi</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sat, 01 Aug 2020 21:00:27 -0400</lastBuildDate><atom:link href="https://soichi.us/blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>circular FFT</title>
+      <link>https://soichi.us/blog/cfft/</link>
+      <pubDate>Sat, 01 Aug 2020 21:00:27 -0400</pubDate>
+      
+      <guid>https://soichi.us/blog/cfft/</guid>
+      <description>The fast-fourier-transformation is a common method of converting the raw audio signal into a frequency spectrum. The spectrum is usually displayed in a linear fashion, but I wanted to see what it would look like if I arranged the spectrum into a spiral so that the names of the corresponding notes are aligned at certain angles.
+The below is a simple javascript App that demonstrates this idea. You can sing to your microphone, or whistle if you want a sharp peaks.</description>
+    </item>
+    
+    <item>
+      <title>systemd startup tips</title>
+      <link>https://soichi.us/blog/systemd-tips/</link>
+      <pubDate>Sat, 01 Aug 2020 18:26:57 -0400</pubDate>
+      
+      <guid>https://soichi.us/blog/systemd-tips/</guid>
+      <description>Some of my docker containers use NFS mounts that are configured in /etc/fstab. During a reboot, I&amp;rsquo;ve seen my containers failing to start when docker engine is started before all the mount points are mounted. There is a relatively simple but not too obvious solution to this which involves tweaking systemd rules such as Requires and After.
+Let me start out by pointing out that, docker engine is controlled by the following service file</description>
+    </item>
+    
+  </channel>
+</rss>

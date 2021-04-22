@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Soichi Hayashi" />
+    <meta name="description" content="Soichi Hayashi - Senior Software Engineer">
+    <link rel="shortcut icon" type="image/x-icon" href="https://soichi.us/img/favicon.ico">
+    <title>circular FFT</title>
+    <meta name="generator" content="Hugo 0.82.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://soichi.us/css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-46824333-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+  </head>
+
+  <body>
+    <div id="wrap">
+
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="https://soichi.us/"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="/blog/">BLOG</a></li>
+        
+        <li><a href="/projects/">PROJECTS</a></li>
+        
+        <li><a href="https://docs.google.com/document/d/17fKDYHgBalLlfEvJQfdrYhar5Er-d9D1ItTDSnG-lPs">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="https://soichi.us/blog/cfft/">circular FFT</a></strong>
+          </h3>
+        </div>
+        <div class="blog-title">
+          <h4>
+          August 1, 2020
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              <p>The <code>fast-fourier-transformation</code> is a common method of converting the raw audio signal into a frequency spectrum. The spectrum is usually displayed in a linear fashion, but I wanted to see what it would look like if I arranged the spectrum into a spiral so that the names of the corresponding notes are aligned at certain angles.</p>
+<p>The below is a simple javascript App that demonstrates this idea. You can sing to your microphone, or whistle if you want a sharp peaks.</p>
+
+
+              <canvas id="canvas" style="width: 100%; height: 800px; background-color: black;"></canvas>
+
+              <script>
+              navigator.mediaDevices.getUserMedia({
+                  video: false, audio: true
+              }).then(stream => {
+                  const ac = new AudioContext();
+                  const source = ac.createMediaStreamSource(stream);
+                  const analyser = ac.createAnalyser();
+                  analyser.fftSize = 2048*4;
+                  
+                  
+                  analyser.smoothingTimeConstant = 0.8; 
+                  console.dir(analyser);
+              
+                  const lp = ac.createBiquadFilter(); 
+                  source.connect(lp);
+                  lp.connect(analyser);
+              
+                  const canvas = document.getElementById("canvas");
+                  canvas.width = canvas.clientWidth;
+                  canvas.height = 800;
+              
+                  const c2d = canvas.getContext("2d");
+              
+                  
+                  
+                  const tds = new Uint8Array(analyser.fftSize); 
+                  
+                  
+                  const freqs = new Uint8Array(analyser.frequencyBinCount);
+              
+                  function indexHue(index) {
+                      return (Math.log2(index) % 1) * 360; 
+                  }
+              
+                  let keyuse = [];
+                  
+                  for(var i = 0;i < 12; ++i) {
+                    keyuse[i] = 20;
+                    
+                  }
+              
+                  let frames = 0;
+                  (function draw() {
+                      requestAnimationFrame(_ => {
+                          frames++;
+                          analyser.getByteFrequencyData(freqs);
+                          analyser.getByteTimeDomainData(tds);
+                          c2d.clearRect(0, 0, canvas.width, canvas.height);
+              
+              
+                          
+                          c2d.fillStyle = "gray";
+                          for (let i = 0; i < analyser.fftSize; i++) {
+                              const v = tds[i];
+                              c2d.fillRect(i, canvas.height - v, 1, v);
+                          }
+              
+                          
+                          const keys = [ "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B" ];
+                          let d = 2*Math.PI/12;
+                          for(var key = 0;key < 12;++key) {
+                              
+                              c2d.lineWidth = 150;
+                              c2d.beginPath();
+                              c2d.arc(canvas.width/2,canvas.height/2,300,key*d+d/4,(key+1)*d-d/4);
+                              c2d.strokeStyle = "hsl("+(key*30)+", 50%, "+keyuse[key]+"%)";
+                              c2d.stroke();
+              
+                              
+                              if(keyuse[key] > 10) {
+                                keyuse[key]-=0.3;
+                              }
+                          }
+              
+                          c2d.fillStyle = 'white';
+                          c2d.font="25px Verdana";
+                          for(var key = 0;key < 12;++key) {
+                              var x = Math.cos((2*Math.PI)*key/12+3.9)*300;
+                              var y = Math.sin((2*Math.PI)*key/12+3.9)*300;
+                              c2d.fillText(keys[key], x+canvas.width/2-10, y+canvas.height/2);
+                          }
+              
+                          c2d.beginPath();
+                          c2d.lineWidth = 2;
+                          var first = true;
+                          
+                          
+                          var prev_note = null;
+                          
+                          for (let i = 0; i < analyser.frequencyBinCount; i++) {
+                              let v = freqs[i];
+                              
+                              var ckey = Math.log2(i);
+                              var oct = Math.floor(ckey);
+                              var key = ckey%1;
+              
+                              if(oct < 4) continue; 
+              
+                              v+=0;
+              
+                              
+                              var note = Math.floor(ckey*12);
+                              var dist = Math.abs(ckey*12 - note);
+                              var use = v/(dist+0.1)/150*oct;
+                              
+                              
+                              if(keyuse[note%12] < use) keyuse[note%12] = use;
+                              
+              
+                              
+                              if(oct > 8) continue; 
+              
+                              var x = Math.cos((2*Math.PI)*key+0.14)*v;
+                              var y = Math.sin((2*Math.PI)*key+0.14)*v;
+                              if(first) c2d.moveTo(canvas.width/2+x, canvas.height/2+y);
+                              first = false;
+                              c2d.lineTo(canvas.width/2+x, canvas.height/2+y);
+                              
+                              if(prev_note == null) prev_note = note;
+                              if(prev_note != note) {
+                                  c2d.strokeStyle = "hsl("+(note*4)+", 90%, 50%)";
+                                  
+                                  
+                                  c2d.stroke();
+                                  prev_note = note;
+                                  c2d.beginPath();
+                                  c2d.moveTo(canvas.width/2+x, canvas.height/2+y);
+                              }
+                          }
+                          c2d.stroke(); 
+              
+                          draw();
+                      });
+                  })();
+              }).catch(err => console.log(err));
+              </script>
+
+              <hr>
+              <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div>
+            </div>
+          </div>
+          <hr>
+        <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = 'soichi';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+        </div>
+      </div>
+      
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://soichi.us/js/docs.min.js"></script>
+<script src="https://soichi.us/js/main.js"></script>
+
+<script src="https://soichi.us/js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

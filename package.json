@@ -1,0 +1,24 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "[![Netlify Status](https://api.netlify.com/api/v1/badges/dcc1987d-9408-4d10-b734-8376d25036dc/deploy-status)](https://app.netlify.com/sites/soichi/deploys)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/soichih/soichi.us.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/soichih/soichi.us/issues"
+  },
+  "homepage": "https://github.com/soichih/soichi.us#readme",
+  "dependencies": {
+    "autoprefixer": "^10.2.5",
+    "postcss-cli": "^8.3.1"
+  }
+}
