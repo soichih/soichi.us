@@ -6,6 +6,11 @@ source:
     url: https://brainlife.io
     description: Free cloud platform for secure neuroscience data analysis.
 
+  - icon: fa fa-globe
+    title: Analysis Platform for Risk, Resilience and Expenditure in Disasters (APRED)
+    url: https://ctil.iu.edu/projects/apred-landing/
+    description: APRED allows economic development practitioners to explore the disaster resilience scores of their county, likewise, the number of businesses within their county that could be more vulnerable to hazards and disasters because of the nature of the business, i.e., low infrastructure mobility, high reliance on public utilities like water and electricity, etc. Further, the end-users can also use APRED to review the storm history of the given county.
+
   - icon: fa fa-github
     title: ezBIDS
     url: https://github.com/brainlife/ezbids
@@ -35,6 +40,11 @@ source:
     title: brainlife/pRFViewer
     url: https://github.com/brainlife/ui-prf
     description: pRF (virual pupulation receptive field) visualizer for brainlife.io
+
+  - icon: fa fa-globe
+    title: Perfsonar pSConfig Web Admin
+    url: https://docs.perfsonar.net/pwa.html
+    description: pSConfig Web Admin (PWA) is a web-based UI for perfSONAR administrators to define and publish MeshConfig/pSConfig meshes, which automates tests executed by test nodes, and provides topology information to various services, such as MadDash.
  
 #  - icon: fa fa-github
 #    description: An eripuit phaedrum qui, nec facer splendide ex, vel ea assum facilisi convenire. Te his neglegentur consectetuer.
